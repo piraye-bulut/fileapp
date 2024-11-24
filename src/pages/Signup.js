@@ -1,17 +1,19 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from '../contexts/AuthContext';
-import { Link } from "react-router-dom";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';  // AuthContext here
+import { Link } from 'react-router-dom';
+import axios from 'axios';
+import { auth } from '../firebase'; // Firebase auth import
 
 export const Signup = () => {
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
   });
-  const [message, setMessage] = useState("");
-  const [errors, setErrors] = useState({});
+  const [message, setMessage] = useState('');
+  const [ setErrors] = useState({});
   const [passwordErrors, setPasswordErrors] = useState({
     length: false,
     number: false,
@@ -19,8 +21,8 @@ export const Signup = () => {
     small: false,
     specialChar: false,
   });
-  const [generalError, setGeneralError] = useState("");
-  const { signup } = useAuth();  // AuthContext from here
+  const [generalError, setGeneralError] = useState('');
+  const { signup } = useAuth(); // AuthContext from here
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -53,7 +55,7 @@ export const Signup = () => {
   const handleSignup = async (e) => {
     e.preventDefault();
     setErrors({});
-    setGeneralError("");
+    setGeneralError('');
 
     const passwordValid =
       passwordErrors.length &&
@@ -63,19 +65,31 @@ export const Signup = () => {
       passwordErrors.specialChar;
 
     if (!passwordValid) {
-      setGeneralError("Lütfen şifre kriterlerini sağlayın.");
+      setGeneralError('Lütfen şifre kriterlerini sağlayın.');
       return;
     }
 
     try {
+      // Firebase SDK ile kullanıcı kaydı
       await signup(formData.email, formData.password);
-      setMessage("Kayıt başarılı. Lütfen emailinizi kontrol edin.");
-      setTimeout(() => {
-        navigate("/login");
-      }, 3000);
+      
+      // Oturum açma sonrası Firebase'den token alma
+      const idToken = await auth.currentUser.getIdToken(true);
+
+      // Backend'de kullanıcı oluşturma
+      await axios.post('http://localhost:3001/auth/signup', {
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        idToken,
+      });
+
+      setMessage('Kayıt başarılı. Lütfen emailinizi kontrol edin.');
+      setTimeout(() => navigate('/login'), 3000);
     } catch (error) {
-      setGeneralError("Kayıt sırasında bir hata oluştu.");
-      setErrors({generalError});
+      console.error('Kayıt sırasında bir hata oluştu:', error);
+      setGeneralError('Kayıt sırasında bir hata oluştu. Lütfen tekrar deneyin.');
     }
   };
 
@@ -90,12 +104,7 @@ export const Signup = () => {
             {message && <div className="text-green-500">{message}</div>}
             <form onSubmit={handleSignup} className="space-y-4 md:space-y-6">
               <div>
-                <label
-                  htmlFor="firstName"
-                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                >
-                  Ad
-                </label>
+                <label htmlFor="firstName" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Ad</label>
                 <input
                   type="text"
                   name="firstName"
@@ -106,21 +115,9 @@ export const Signup = () => {
                   value={formData.firstName}
                   onChange={handleChange}
                 />
-                {errors.firstName && errors.firstName.length > 0 && (
-                  <div className="text-red-500 text-sm">
-                    {errors.firstName.map((error, idx) => (
-                      <p key={idx}>{error}</p>
-                    ))}
-                  </div>
-                )}
               </div>
               <div>
-                <label
-                  htmlFor="lastName"
-                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                >
-                  Soyad
-                </label>
+                <label htmlFor="lastName" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Soyad</label>
                 <input
                   type="text"
                   name="lastName"
@@ -131,21 +128,9 @@ export const Signup = () => {
                   value={formData.lastName}
                   onChange={handleChange}
                 />
-                {errors.lastName && errors.lastName.length > 0 && (
-                  <div className="text-red-500 text-sm">
-                    {errors.lastName.map((error, idx) => (
-                      <p key={idx}>{error}</p>
-                    ))}
-                  </div>
-                )}
               </div>
               <div>
-                <label
-                  htmlFor="email"
-                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                >
-                  Email Adresi
-                </label>
+                <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Email Adresi</label>
                 <input
                   type="email"
                   name="email"
@@ -156,21 +141,9 @@ export const Signup = () => {
                   value={formData.email}
                   onChange={handleChange}
                 />
-                {errors.email && errors.email.length > 0 && (
-                  <div className="text-red-500 text-sm">
-                    {errors.email.map((error, idx) => (
-                      <p key={idx}>{error}</p>
-                    ))}
-                  </div>
-                )}
               </div>
               <div>
-                <label
-                  htmlFor="password"
-                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                >
-                  Şifre
-                </label>
+                <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Şifre</label>
                 <input
                   type="password"
                   name="password"
@@ -182,73 +155,25 @@ export const Signup = () => {
                   onChange={handlePasswordChange}
                 />
                 <div className="mt-2 text-sm text-gray-600">
-                  <p
-                    className={
-                      passwordErrors.length ? "text-green-500" : "text-red-500"
-                    }
-                  >
-                    En az 5 karakter olmalı
-                  </p>
-                  <p
-                    className={
-                      passwordErrors.number ? "text-green-500" : "text-red-500"
-                    }
-                  >
-                    En az 1 sayı içermeli
-                  </p>
-                  <p
-                    className={
-                      passwordErrors.capital ? "text-green-500" : "text-red-500"
-                    }
-                  >
-                    En az 1 büyük harf içermeli
-                  </p>
-                  <p
-                    className={
-                      passwordErrors.small ? "text-green-500" : "text-red-500"
-                    }
-                  >
-                    En az 1 küçük harf içermeli
-                  </p>
-                  <p
-                    className={
-                      passwordErrors.specialChar
-                        ? "text-green-500"
-                        : "text-red-500"
-                    }
-                  >
-                    En az 1 özel karakter içermeli
-                  </p>
+                  <p className={passwordErrors.length ? "text-green-500" : "text-red-500"}>En az 5 karakter olmalı</p>
+                  <p className={passwordErrors.number ? "text-green-500" : "text-red-500"}>En az 1 sayı içermeli</p>
+                  <p className={passwordErrors.capital ? "text-green-500" : "text-red-500"}>En az 1 büyük harf içermeli</p>
+                  <p className={passwordErrors.small ? "text-green-500" : "text-red-500"}>En az 1 küçük harf içermeli</p>
+                  <p className={passwordErrors.specialChar ? "text-green-500" : "text-red-500"}>En az 1 özel karakter içermeli</p>
                 </div>
-                {errors.password && errors.password.length > 0 && (
-                  <div className="text-red-500 text-sm">
-                    {errors.password.map((error, idx) => (
-                      <p key={idx}>{error}</p>
-                    ))}
-                  </div>
-                )}
               </div>
 
-              <button
-                type="submit"
-                className="w-full text-white bg-red-500 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-              >
+              <button type="submit" className="w-full text-white bg-red-500 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                 Hesap Oluştur
               </button>
               <p className="text-sm font-light text-gray-500 dark:text-gray-400">
                 Hesabın var mı?{" "}
-                <Link
-                  to="/login"
-                  className="font-medium text-primary-600 hover:underline dark:text-primary-500"
-                >
+                <Link to="/login" className="font-medium text-primary-600 hover:underline dark:text-primary-500">
                   Giriş Yap
                 </Link>
               </p>
             </form>
-
-            {generalError && (
-              <div className="text-red-500 text-sm">{generalError}</div>
-            )}
+            {generalError && <div className="text-red-500 text-sm">{generalError}</div>}
           </div>
         </div>
       </div>

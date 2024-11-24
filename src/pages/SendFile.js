@@ -1,8 +1,8 @@
+// src/pages/SendFile.js
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../firebase';
 import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
-
 
 export const SendFile = () => {
   const [recipientEmail, setRecipientEmail] = useState('');
@@ -11,8 +11,22 @@ export const SendFile = () => {
   const [uploading, setUploading] = useState(false);
   const { currentUser } = useAuth();
 
+  const validateFile = (file) => {
+    const validTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+    const maxSize = 1024 * 1024 * 10; // 10MB
+
+    if (!validTypes.includes(file.type)) {
+      throw new Error("Invalid file type");
+    }
+
+    if (file.size > maxSize) {
+      throw new Error("File size exceeds the maximum limit");
+    }
+  };
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
+    validateFile(file); // Dosya doğrulaması
     setFile(file);
 
     const reader = new FileReader();
@@ -57,7 +71,6 @@ export const SendFile = () => {
 
   return (
     <div>
-      
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-800">
         <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 text-center">Dosya Gönder</h1>

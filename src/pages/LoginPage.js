@@ -2,20 +2,30 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
+import { auth } from '../firebase'; // Firebase auth import
 
 export const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login } = useAuth();  // AuthContext from here
+  const { login } = useAuth(); // AuthContext from here
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    
+
     try {
+      // Firebase SDK ile oturum açma işlemi
       await login(email, password);
+
+      // Oturum açma sonrası Firebase'den token alma
+      const idToken = await auth.currentUser.getIdToken(true);
+
+      // Backend'e giriş isteği gönder ve token al (Backend'in CORS politikalarının uygun olduğundan emin olun)
+      const response = await axios.post('http://localhost:3001/auth/login', { email, password, idToken });
+
       alert('Giriş başarılı');
-      navigate('/dashboard');  // Successful login redirects to the dashboard
+      navigate('/dashboard'); // Successful login redirects to the dashboard
     } catch (error) {
       console.error('Giriş sırasında bir hata oluştu:', error);
       alert('Giriş sırasında bir hata oluştu. Lütfen tekrar deneyin.');
@@ -32,7 +42,9 @@ export const LoginPage = () => {
             </h1>
             <form onSubmit={handleLogin} className="space-y-4 md:space-y-6">
               <div>
-                <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Kullanıcı Adı (Mail)</label>
+                <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                  Kullanıcı Adı (Mail)
+                </label>
                 <input
                   type="email"
                   name="email"
@@ -45,7 +57,9 @@ export const LoginPage = () => {
                 />
               </div>
               <div>
-                <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Şifre</label>
+                <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                  Şifre
+                </label>
                 <input
                   type="password"
                   name="password"
@@ -68,12 +82,14 @@ export const LoginPage = () => {
                     />
                   </div>
                   <div className="ml-3 text-sm">
-                    <label htmlFor="remember" className="text-gray-500 dark:text-gray-300">Hatırla Beni</label>
+                    <label htmlFor="remember" className="text-gray-500 dark:text-gray-300">
+                      Hatırla Beni
+                    </label>
                   </div>
                 </div>
-                <button 
-                  type="button" 
-                  onClick={() => alert('Şifrenizi sıfırlamak için destek ekibiyle iletişime geçin.')} 
+                <button
+                  type="button"
+                  onClick={() => alert('Şifrenizi sıfırlamak için destek ekibiyle iletişime geçin.')}
                   className="text-sm font-medium text-primary-600 hover:underline dark:text-primary-500"
                 >
                   Şifreni unuttun mu?
