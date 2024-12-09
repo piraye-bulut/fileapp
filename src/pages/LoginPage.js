@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
-import { auth } from '../firebase'; // Firebase auth import
+//import axios from 'axios';
+//import { auth } from '../firebase'; // Firebase auth import
 
 export const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -19,10 +19,10 @@ export const LoginPage = () => {
       await login(email, password);
 
       // Oturum açma sonrası Firebase'den token alma
-      const idToken = await auth.currentUser.getIdToken(true);
+      //const idToken = await auth.currentUser.getIdToken(true);
 
       // Backend'e giriş isteği gönder ve token al (Backend'in CORS politikalarının uygun olduğundan emin olun)
-      const response = await axios.post('http://localhost:3001/auth/login', { email, password, idToken });
+      //const response = await axios.post('http://localhost:3001/auth/login', { email, password, idToken });
 
       alert('Giriş başarılı');
       navigate('/dashboard'); // Successful login redirects to the dashboard
