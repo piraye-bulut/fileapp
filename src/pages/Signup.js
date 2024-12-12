@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';  // AuthContext here
-import { Link } from 'react-router-dom';
-import axios from 'axios';
 import { auth } from '../firebase'; // Firebase auth import
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { Link } from 'react-router-dom';
 
 export const Signup = () => {
   const [formData, setFormData] = useState({
@@ -21,7 +20,6 @@ export const Signup = () => {
     specialChar: false,
   });
   const [generalError, setGeneralError] = useState('');
-  const { signup } = useAuth(); // AuthContext from here
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -68,19 +66,16 @@ export const Signup = () => {
     }
 
     try {
-      // Firebase SDK ile kullanıcı kaydı
-      await signup(formData.email, formData.password);
+      // Firebase üzerinde kullanıcı yaratma
+      await createUserWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      );
       
-      // Oturum açma sonrası Firebase'den token alma
-      const idToken = await auth.currentUser.getIdToken(true);
-
-      // Backend'de kullanıcı oluşturma
-      await axios.post('http://localhost:3001/auth/signup', {
-        email: formData.email,
-        password: formData.password,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        idToken,
+      // Profil güncellemesi
+      await updateProfile(auth.currentUser, {
+        displayName: `${formData.firstName} ${formData.lastName}`,
       });
 
       setMessage('Kayıt başarılı. Lütfen emailinizi kontrol edin.');
