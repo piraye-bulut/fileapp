@@ -13,7 +13,6 @@ export const Signup = () => {
     password: '',
   });
   const [message, setMessage] = useState('');
-  const [ setErrors] = useState({});
   const [passwordErrors, setPasswordErrors] = useState({
     length: false,
     number: false,
@@ -54,7 +53,6 @@ export const Signup = () => {
 
   const handleSignup = async (e) => {
     e.preventDefault();
-    setErrors({});
     setGeneralError('');
 
     const passwordValid =
