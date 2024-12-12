@@ -12,7 +12,15 @@ export const SendFile = () => {
   const { currentUser } = useAuth();
 
   const validateFile = (file) => {
-    const validTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+    const validTypes = [
+      'image/jpeg', 
+      'image/png', 
+      'application/pdf', 
+      'application/msword', 
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 
+      'application/vnd.ms-powerpoint', 
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+    ];
     const maxSize = 1024 * 1024 * 10; // 10MB
 
     if (!validTypes.includes(file.type)) {
